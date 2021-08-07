@@ -223,7 +223,7 @@ NotificationTable.InsertNotification = function(Notification, Duration, Retracti
 	
 	Tween.Completed:Connect(function(State)
 		if State == Enum.PlaybackState.Completed then
-			Notification.Parent:Destroy();
+			Notification:Destroy();
 			for _, NotificationObject in next, NotificationFolder:GetChildren() do
 				if NotificationObject["_Template"] then
 					--local Notification = NotificationObject["_Template"];
