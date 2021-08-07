@@ -1,4 +1,3 @@
--- Full Credits to Iris https://v3rmillion.net/showthread.php?tid=1124741
 local NotificationTable = {};
 local Done = true;
 local TweenService = game:GetService("TweenService");
@@ -223,24 +222,15 @@ NotificationTable.InsertNotification = function(Notification, Duration, Retracti
 	
 	Tween.Completed:Connect(function(State)
 		if State == Enum.PlaybackState.Completed then
-			pcall(function()
-				Notification.Parent:Destroy();
-			end)
+			Notification.Parent:Destroy();
 			for _, NotificationObject in next, NotificationFolder:GetChildren() do
-				-- if NotificationObject["_Template"] then
-					-- local Notification = NotificationObject["_Template"];
-					-- TweenService:Create(Notification, TweenInfo.new(.25), {
-						-- Position = UDim2.new(1, -280, 1, Notification.Position.Y.Offset + 70);
-					-- }):Play();
-					-- for i = 1, 10 do
-						-- wait(.25)
-						-- Notification.Position = UDim2.new(1, -280, 1, Notification.Position.Y.Offset + 70)
-					-- end
-				end
+				local Notification = NotificationObject["_Template"];
+
+				TweenService:Create(Notification, TweenInfo.new(.25), {
+					Position = UDim2.new(1, -280, 1, Notification.Position.Y.Offset + 70);
+				}):Play();
 			end
 			Done = true
-		else
-			warn("did not complete")
 		end
 	end)
 	
