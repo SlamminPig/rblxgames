@@ -227,8 +227,8 @@ NotificationTable.InsertNotification = function(Notification, Duration, Retracti
 				Notification.Parent:Destroy();
 			end)
 			for _, NotificationObject in next, NotificationFolder:GetChildren() do
-				if NotificationObject["_Template"] then
-					--local Notification = NotificationObject["_Template"];
+				-- if NotificationObject["_Template"] then
+					-- local Notification = NotificationObject["_Template"];
 					-- TweenService:Create(Notification, TweenInfo.new(.25), {
 						-- Position = UDim2.new(1, -280, 1, Notification.Position.Y.Offset + 70);
 					-- }):Play();
