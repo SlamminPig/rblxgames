@@ -356,8 +356,8 @@ local function CreateWallArgs()
 		Duration = 5,
 
 		MainSettings = {
-			Orientation = "Middle",
-			VisibleSize = UDim2.new(0.96981132, 0, 0.947604775, 0);
+			Orientation = "Top",
+			VisibleSize = UDim2.new(0.8, 0, 0.947604775, 0);
 			HiddenSize  = UDim2.new(0, 0, 0.947604775, 0),
 			TweenTime 	= 0.8
 		},
@@ -451,7 +451,7 @@ NotificationTable.CreateWallNotification = function(TitleText, DescriptionText, 
 	Description.Parent = Main
 	Description.BackgroundTransparency = 1.000
 	Description.Position = UDim2.new(0.0149156936, 0, 0.127962083, 0)
-	Description.Size = UDim2.new(0.6, 0, 0.830963671, 0)
+	Description.Size = UDim2.new(0.969520092, 0, 0.830963671, 0)
 	Description.Text = DescriptionText
 	Description.TextColor3 = DescriptionSettings.TextColor3
 	Description.TextScaled = DescriptionSettings.TextScaled
