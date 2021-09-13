@@ -1,5 +1,5 @@
 -- Full credits to Iris https://v3rmillion.net/showthread.php?tid=1124741
-
+getgenv().IrisAd = true
 local NotificationTable = {};
 local Done = true;
 local TweenService = game:GetService("TweenService");
