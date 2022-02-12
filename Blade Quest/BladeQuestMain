@@ -8,7 +8,7 @@ getgenv().BladeQuestAutofarm = {
 	FailSafeRejoin = false; -- Will try to go back to lobby if Character is stuck somewhere...
 	FailSafeSeconds = 300;
 	TweenSpeed = 50; -- Higher = faster
-	Offset = Vector3.new(0,5,7) -- Anticheat triggers if you go above mob
+	Offset = Vector3.new(0,5,7); -- Anticheat triggers if you go above mob
     AutoUpgradePlayerSkill = ""; -- "HealthSkill", "SwordSkill", "MagicSkill" or leave empty to turn off
     AutoMergeSwords = false;
     AutoUpgradeSword = false;
