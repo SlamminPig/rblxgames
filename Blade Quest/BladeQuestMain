@@ -5,7 +5,7 @@ getgenv().BladeQuestAutofarm = {
 	Map = "Ghost Town"; 
 	Difficulty = "Hard";
 	Hardcore = false;
-	FailSafeRejoin = false;
+	FailSafeRejoin = false; -- Tries to go back to lobby if Character is stuck somewhere...
 	FailSafeSeconds = 200;
 }
 
