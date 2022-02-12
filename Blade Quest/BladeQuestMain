@@ -1,0 +1,12 @@
+-- https://www.roblox.com/games/6494523288/Blade-Quest
+-- Put this in your autoexe folder
+getgenv().BladeQuestAutofarm = {
+	Enabled = true;
+	Map = "Ghost Town"; 
+	Difficulty = "Hard";
+	Hardcore = false;
+	FailSafeRejoin = false;
+	FailSafeSeconds = 200;
+}
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/SlamminPig/rblxgames/main/Blade%20Quest/BladeQuestLoadstring"))()
