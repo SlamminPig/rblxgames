@@ -5,8 +5,9 @@ getgenv().BladeQuestAutofarm = {
 	Map = "Ghost Town"; 
 	Difficulty = "Hard";
 	Hardcore = false;
-	FailSafeRejoin = false; -- Tries to go back to lobby if Character is stuck somewhere...
-	FailSafeSeconds = 200;
+	FailSafeRejoin = false;
+	FailSafeSeconds = 300;
+	Offset = Vector3.new(0,2,7)
 }
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/SlamminPig/rblxgames/main/Blade%20Quest/BladeQuestLoadstring"))()
