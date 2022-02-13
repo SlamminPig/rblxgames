@@ -1,5 +1,6 @@
 -- https://www.roblox.com/games/6494523288/Blade-Quest
 -- Put this in your autoexe folder
+-- I keep this updated frequently
 getgenv().BladeQuestAutofarm = {
 	Enabled = true;
 	Map = "Forest"; 
