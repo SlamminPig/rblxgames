@@ -10,7 +10,8 @@ getgenv().BladeQuestAutofarm = {
 	TweenSpeed = 50; -- Higher = faster
 	Offset = Vector3.new(0,5,7); -- Anticheat triggers if you go above mob
     AutoUpgradePlayerSkill = ""; -- "HealthSkill", "SwordSkill", "MagicSkill" or leave empty to turn off
-    AutoMergeSwords = false;
+    AutoMerge = false;
     AutoUpgradeSword = false;
+    Webhook = ""; -- leave empty to turn off
 }
 loadstring(game:HttpGet("https://raw.githubusercontent.com/SlamminPig/rblxgames/main/Blade%20Quest/BladeQuestLoadstring"))()
