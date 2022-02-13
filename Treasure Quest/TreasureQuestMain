@@ -4,6 +4,7 @@ getgenv().TreasureQuestAutofarm = {
 	Dungeon = "Ancient Jungle";
 	Difficulty = "Easy";
 	GameMode = "Classic";
+	EndlessSellFullInventory = true;
 	FailSafeRejoin = false; -- Tries to go back to lobby if Character is stuck somewhere...
 	FailSafeSeconds = 200;
 }
