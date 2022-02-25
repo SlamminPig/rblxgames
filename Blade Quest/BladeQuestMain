@@ -13,6 +13,7 @@ getgenv().BladeQuestAutofarm = {
     AutoUpgradePlayerSkill = ""; -- "HealthSkill", "SwordSkill", "MagicSkill" or leave empty to turn off
     AutoMerge = false;
     AutoUpgradeSword = false;
+	AutoEquipBestSword = true;
     Webhook = ""; -- leave empty to turn off
 }
 loadstring(game:HttpGet("https://raw.githubusercontent.com/SlamminPig/rblxgames/main/Blade%20Quest/BladeQuestLoadstring"))()
