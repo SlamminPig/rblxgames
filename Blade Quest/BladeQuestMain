@@ -5,6 +5,7 @@ getgenv().BladeQuestAutofarm = {
 	Enabled = true;
 	Map = "Forest"; 
 	Difficulty = "Easy";
+	AutoDifficulty = true; -- Ignore Map and Difficulty settings
 	Hardcore = false;
 	FailSafeRejoin = false; -- Will try to go back to lobby if Character is stuck somewhere...
 	FailSafeSeconds = 300;
