@@ -345,7 +345,7 @@ local function CharAdded(char)
             if c.Name == "HumanoidRootPart" then
                 ev:Disconnect()
                 ESP:Add(char, {
-                    Name = p.Name,
+                    Name = p.DisplayName,
                     Player = p,
                     PrimaryPart = c
                 })
@@ -353,7 +353,7 @@ local function CharAdded(char)
         end)
     else
         ESP:Add(char, {
-            Name = p.Name,
+            Name = p.DisplayName,
             Player = p,
             PrimaryPart = char.HumanoidRootPart
         })
