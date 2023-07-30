@@ -418,8 +418,11 @@ local function CharAdded(char)
 end
 local function PlayerAdded(p)
 	p.CharacterAdded:Connect(CharAdded)
+	task.wait()
 	if p.Character then
-		coroutine.wrap(CharAdded)(p.Character)
+		pcall(function()
+			coroutine.wrap(CharAdded)(p.Character)
+		end)
 	end
 end
 plrs.PlayerAdded:Connect(PlayerAdded)
