@@ -399,7 +399,7 @@ local function CharAdded(char)
 	if not char:FindFirstChild("HumanoidRootPart") then
 		local ev
 		ev = char.ChildAdded:Connect(function(c)
-			if c.Name == "HumanoidRootPart" then
+			if c.Name == "HumanoidRootPart" and ESP and p and char then
 				ev:Disconnect()
 				ESP:Add(char, {
 					Name = p.DisplayName,
