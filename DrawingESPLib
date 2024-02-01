@@ -360,17 +360,19 @@ local function CharAdded(char)
     end
 end
 
-local function PlayerAdded(p)
-    p.CharacterAdded:Connect(CharAdded)
-    if p.Character then
-        coroutine.wrap(CharAdded)(p.Character)
-    end
-end
-plrs.PlayerAdded:Connect(PlayerAdded)
-for i,v in pairs(plrs:GetPlayers()) do
-    if v ~= plr then
-        PlayerAdded(v)
-    end
+if game.GameId ~= 3213362013 then
+	local function PlayerAdded(p)
+		p.CharacterAdded:Connect(CharAdded)
+		if p.Character then
+			coroutine.wrap(CharAdded)(p.Character)
+		end
+	end
+	plrs.PlayerAdded:Connect(PlayerAdded)
+	for i,v in pairs(plrs:GetPlayers()) do
+		if v ~= plr then
+			PlayerAdded(v)
+		end
+	end
 end
 
 game:GetService("RunService").RenderStepped:Connect(function()
