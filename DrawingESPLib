@@ -120,6 +120,7 @@ function ESP:AddObjectListener(parent, options)
 
     if options.Recursive then
         parent.DescendantAdded:Connect(NewListener)
+		task.wait()
         for i,v in pairs(parent:GetDescendants()) do
             coroutine.wrap(NewListener)(v)
         end
