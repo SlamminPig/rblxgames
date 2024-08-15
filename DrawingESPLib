@@ -356,26 +356,28 @@ local function CharAdded(char)
     end
 end
 
--- Improved Player Character Added Event Handling --
-plrs.PlayerAdded:Connect(function(newPlayer)
-    newPlayer.CharacterAdded:Connect(CharAdded)
-    if newPlayer.Character then
-        task.spawn(function()
-			CharAdded(newPlayer.Character)
-		end)
-    end
-end)
-
--- Connect to existing players' characters --
-for _, player in ipairs(plrs:GetPlayers()) do
-    if player ~= plr then
-        player.CharacterAdded:Connect(CharAdded)
-        if player.Character then
+if game.GameId ~= 3213362013 then
+	-- Improved Player Character Added Event Handling --
+	plrs.PlayerAdded:Connect(function(newPlayer)
+		newPlayer.CharacterAdded:Connect(CharAdded)
+		if newPlayer.Character then
 			task.spawn(function()
-				CharAdded(player.Character)
+				CharAdded(newPlayer.Character)
 			end)
-        end
-    end
+		end
+	end)
+
+	-- Connect to existing players' characters --
+	for _, player in ipairs(plrs:GetPlayers()) do
+		if player ~= plr then
+			player.CharacterAdded:Connect(CharAdded)
+			if player.Character then
+				task.spawn(function()
+					CharAdded(player.Character)
+				end)
+			end
+		end
+	end
 end
 
 -- Initialize --
