@@ -1,6 +1,5 @@
 -- Full credits to Kiriot22 https://v3rmillion.net/showthread.php?tid=1088719
 
--- Settings --
 local ESP = {
 	Enabled = false,
 	Boxes = true,
@@ -16,10 +15,10 @@ local ESP = {
 	Players = true,
 
 	Objects = setmetatable({}, { __mode = "kv" }),
-	Overrides = {}
+	Overrides = {},
+	Debug = false
 }
 
--- Declarations --
 local cam = workspace.CurrentCamera
 local plrs = game:GetService("Players")
 local plr = plrs.LocalPlayer
@@ -28,7 +27,6 @@ local RunService = game:GetService("RunService")
 local V3new = Vector3.new
 local WorldToViewportPoint = cam.WorldToViewportPoint
 
--- Functions --
 local function Draw(obj, props)
 	local newObj
 	local success, err = pcall(function()
@@ -184,7 +182,6 @@ function boxBase:Update()
 		return
 	end
 
-	-- Calculations --
 	local cf = self.PrimaryPart.CFrame
 	if ESP.FaceCamera then
 		cf = CFrame.new(cf.p, cam.CFrame.p)
@@ -199,7 +196,6 @@ function boxBase:Update()
 		Torso = cf * ESP.BoxShift
 	}
 
-	-- Box --
 	if ESP.Boxes and self.Components.Quad then
 		local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
 		local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
@@ -220,7 +216,6 @@ function boxBase:Update()
 		self.Components.Quad.Visible = false
 	end
 
-	-- Name and Distance --
 	if ESP.Names then
 		local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
 		if Vis5 then
@@ -242,7 +237,6 @@ function boxBase:Update()
 		self.Components.Distance.Visible = false
 	end
 
-	-- Tracer --
 	if ESP.Tracers then
 		local TorsoPos, Vis6 = WorldToViewportPoint(cam, locs.Torso.p)
 		if Vis6 then
@@ -335,7 +329,6 @@ function ESP:Add(obj, options)
 	return box
 end
 
--- Initialize --
 RunService.RenderStepped:Connect(function()
 	for _, v in pairs(ESP.Objects) do
 		if v.Type == "Box" then
@@ -347,17 +340,31 @@ end)
 local function CharAdded(char)
     local plr = ESP:GetPlrFromChar(char)
     if plr and (ESP.Players or ESP:IsTeamMate(plr)) then
-        ESP:Add(char, {
-            Name = plr.DisplayName,
-            PrimaryPart = char:WaitForChild("HumanoidRootPart"),
-            Color = ESP:GetColor(char),
-            IsEnabled = function() return ESP.Players and (ESP.TeamMates or not ESP:IsTeamMate(plr)) end
-        })
+        local timeout = 5 
+        local startTime = tick()
+        local rootPart
+
+        while not rootPart and (tick() - startTime) < timeout do
+            rootPart = char:FindFirstChild("HumanoidRootPart")
+            if not rootPart then
+                char.ChildAdded:Wait()
+            end
+        end
+
+        if rootPart then
+            ESP:Add(char, {
+                Name = plr.Name,
+                PrimaryPart = rootPart,
+                Color = ESP:GetColor(char),
+                IsEnabled = function() return ESP.Players and (ESP.TeamMates or not ESP:IsTeamMate(plr)) end
+            })
+        elseif ESP.Debug then
+            warn("HumanoidRootPart not found for character:", char.Name)
+        end
     end
 end
 
 if game.GameId ~= 3213362013 then
-	-- Improved Player Character Added Event Handling --
 	plrs.PlayerAdded:Connect(function(newPlayer)
 		newPlayer.CharacterAdded:Connect(CharAdded)
 		if newPlayer.Character then
@@ -367,7 +374,6 @@ if game.GameId ~= 3213362013 then
 		end
 	end)
 
-	-- Connect to existing players' characters --
 	for _, player in ipairs(plrs:GetPlayers()) do
 		if player ~= plr then
 			player.CharacterAdded:Connect(CharAdded)
@@ -380,7 +386,6 @@ if game.GameId ~= 3213362013 then
 	end
 end
 
--- Initialize --
 RunService.RenderStepped:Connect(function()
 	for _, v in pairs(ESP.Objects) do
 		if v.Type == "Box" then
