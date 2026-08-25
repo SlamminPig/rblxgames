@@ -153,18 +153,44 @@ function library:CreateWindow(options)
 		end
 	end)
 
-	self:Create('TextLabel', {
-		Size = UDim2.new(1, 0, 1, 0),
-		BackgroundTransparency = 1;
-		BorderSizePixel = 0;
-		TextColor3 = options.txtcolor,
-		TextColor3 = (options.bartextcolor or Color3.fromRGB(255, 255, 255));
-		TextSize = 17,
-		Font = Enum.Font.FredokaOne;
-		Text = options.text or 'window',
-		Name = 'Window',
+	local titleText = options.text or 'window'
+	local maxHeaderWidth = 155
+
+	local titleContainer = self:Create('Frame', {
+		Name = 'TitleContainer',
+		Size = UDim2.new(1, -35, 1, 0),
+		Position = UDim2.new(0, 8, 0, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
 		Parent = window.frame,
 	})
+
+	local titleLabel = self:Create('TextLabel', {
+		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		TextColor3 = (options.bartextcolor or Color3.fromRGB(255, 255, 255)),
+		TextSize = 15,
+		Font = Enum.Font.FredokaOne,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		Text = titleText,
+		Name = 'Window',
+		Parent = titleContainer,
+	})
+
+	local textSize = game:GetService('TextService'):GetTextSize(titleText, 15, Enum.Font.FredokaOne, Vector2.new(math.huge, math.huge))
+
+	if textSize.X > maxHeaderWidth then
+		task.spawn(function()
+			local display = titleText..'        '
+			while task.wait(.2) and titleLabel and titleLabel.Parent do
+				display = display:sub(2)..display:sub(1, 1)
+				titleLabel.Text = display
+			end
+		end)
+	end
 
 	do
 		dragger.new(window.frame)
