@@ -341,13 +341,13 @@ function library:CreateWindow(options)
 
 	function window:AddDropdown(options, callback)
 		self.count = self.count + 1
-		local default = options[1] or '';
-	   
+		local default = options[1] or ''
+		
 		callback = callback or function() end
 		local dropdown = library:Create('TextLabel', {
 			Size = UDim2.new(1, -10, 0, 20);
-			BackgroundTransparency = 0.75;
-			BackgroundColor3 = options.boxcolor,
+			BackgroundTransparency = .75;
+			BackgroundColor3 = options.boxcolor or Color3.fromRGB(40, 40, 40);
 			TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextXAlignment = Enum.TextXAlignment.Center;
 			TextSize = 14,
@@ -357,7 +357,7 @@ function library:CreateWindow(options)
 			LayoutOrder = self.Count;
 			Parent = self.container;
 		})
-	   
+		
 		local button = library:Create('ImageButton',{
 			BackgroundTransparency = 1;
 			Image = 'rbxassetid://3234893186';
@@ -365,16 +365,16 @@ function library:CreateWindow(options)
 			Position = UDim2.new(1, -20, 0, 0);
 			Parent = dropdown;
 		})
-	   
+		
 		local frame;
-	   
+		
 		local function isInGui(frame)
 			local mloc = game:GetService('UserInputService'):GetMouseLocation();
 			local mouse = Vector2.new(mloc.X, mloc.Y - 36);
-		   
+			
 			local x1, x2 = frame.AbsolutePosition.X, frame.AbsolutePosition.X + frame.AbsoluteSize.X;
 			local y1, y2 = frame.AbsolutePosition.Y, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y;
-	   
+		
 			return (mouse.X >= x1 and mouse.X <= x2) and (mouse.Y >= y1 and mouse.Y <= y2)
 		end
 
@@ -385,9 +385,10 @@ function library:CreateWindow(options)
 			end
 			return c;
 		end
-	   
-	   button.MouseButton1Click:connect(function()
-			if count(options) == 0 then
+		
+		button.MouseButton1Click:connect(function()
+			local totalCount = count(options)
+			if totalCount == 0 then
 				return
 			end
 
@@ -399,18 +400,32 @@ function library:CreateWindow(options)
 			
 			self.container.ClipsDescendants = false;
 
-			frame = library:Create('Frame', {
+			local itemHeight = 21
+			local maxVisibleItems = 5
+			local displayItems = math.min(totalCount, maxVisibleItems)
+			local frameHeight = displayItems * itemHeight
+
+			frame = library:Create('ScrollingFrame', {
 				Position = UDim2.new(0, 0, 1, 0);
-				BackgroundColor3 = Color3.fromRGB(0, 255, 255);
-				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, (count(options) * 21));
+				BackgroundColor3 = Color3.fromRGB(40, 40, 40);
+				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight);
+				CanvasSize = UDim2.new(0, 0, 0, totalCount * itemHeight);
+				ScrollBarThickness = 5;
+				ScrollBarImageColor3 = Color3.fromRGB(0, 255, 140);
 				BorderSizePixel = 0;
+				ScrollingEnabled = true;
+				ScrollingDirection = Enum.ScrollingDirection.Y;
+				Active = true;
+				Selectable = false;
+				ElasticBehavior = Enum.ElasticBehavior.WhenScrollable;
 				Parent = dropdown;
 				ClipsDescendants = true;
-				ZIndex = 2;
+				ZIndex = 3;
 			})
-		   
+			
 			library:Create('UIListLayout', {
 				Name = 'Layout';
+				SortOrder = Enum.SortOrder.LayoutOrder;
 				Parent = frame;
 			})
 
@@ -418,42 +433,51 @@ function library:CreateWindow(options)
 				local selection = library:Create('TextButton', {
 					Text = option;
 					BackgroundColor3 = Color3.fromRGB(40, 40, 40);
+					BackgroundTransparency = .75;
 					TextColor3 = Color3.fromRGB(255, 255, 255);
 					BorderSizePixel = 0;
 					TextSize = 14;
 					Font = Enum.Font.FredokaOne;
-					Size = UDim2.new(1, 0, 0, 21);
+					Size = UDim2.new(1, -6, 0, itemHeight);
+					LayoutOrder = i;
+					AutoButtonColor = true;
 					Parent = frame;
-					ZIndex = 2;
+					ZIndex = 3;
 				})
-			   
-				selection.MouseButton1Click:connect(function()
+				
+				selection.Activated:connect(function()
 					dropdown.Text = option;
 					callback(option)
-					frame.Size = UDim2.new(1, 0, 0, 0);
-					game:GetService('Debris'):AddItem(frame, 0.1)
+					if frame then
+						frame:Destroy();
+						frame = nil;
+					end
 				end)
 			end
 		end);
 
 		game:GetService('UserInputService').InputBegan:connect(function(m)
-			if m.UserInputType == Enum.UserInputType.MouseButton1 then
+			if m.UserInputType == Enum.UserInputType.MouseButton1 or m.UserInputType == Enum.UserInputType.Touch then
 				if frame and (not isInGui(frame)) then
-					game:GetService('Debris'):AddItem(frame);
+					frame:Destroy();
+					frame = nil;
 				end
 			end
 		end)
-	   
+		
 		callback(default);
 		self:Resize()
 		return {
 			Refresh = function(self, array)
-				game:GetService('Debris'):AddItem(frame);
+				if frame then
+					frame:Destroy();
+					frame = nil;
+				end
 				options = array
-				dropdown.Text = options[1];
+				dropdown.Text = options[1] or '';
 			end
 		}
-	end;
+	end
    
    
 	return window
