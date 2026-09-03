@@ -339,11 +339,17 @@ function library:CreateWindow(options)
 		return button
 	end
 
-	function window:AddDropdown(options, callback)
+	function window:AddDropdown(options, default, callback)
 		self.count = self.count + 1
-		local default = options[1] or ''
-		
+
+		if type(default) == 'function' then
+			callback = default
+			default = options[1] or ''
+		end
+
+		default = default or options[1] or ''
 		callback = callback or function() end
+
 		local dropdown = library:Create('TextLabel', {
 			Size = UDim2.new(1, -10, 0, 20);
 			BackgroundTransparency = .75;
@@ -468,13 +474,15 @@ function library:CreateWindow(options)
 		callback(default);
 		self:Resize()
 		return {
-			Refresh = function(self, array)
+			Refresh = function(self, array, newDefault)
 				if frame then
 					frame:Destroy();
 					frame = nil;
 				end
 				options = array
-				dropdown.Text = options[1] or '';
+				local nextVal = newDefault or options[1] or ''
+				dropdown.Text = nextVal
+				callback(nextVal)
 			end
 		}
 	end
