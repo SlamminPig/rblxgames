@@ -373,15 +373,17 @@ function library:CreateWindow(options)
 		})
 		
 		local frame;
-		
-		local function isInGui(frame)
-			local mloc = game:GetService('UserInputService'):GetMouseLocation();
-			local mouse = Vector2.new(mloc.X, mloc.Y - 36);
-			
-			local x1, x2 = frame.AbsolutePosition.X, frame.AbsolutePosition.X + frame.AbsoluteSize.X;
-			local y1, y2 = frame.AbsolutePosition.Y, frame.AbsolutePosition.Y + frame.AbsoluteSize.Y;
-		
-			return (mouse.X >= x1 and mouse.X <= x2) and (mouse.Y >= y1 and mouse.Y <= y2)
+		local backdrop;
+
+		local function closeDropdown()
+			if frame then
+				frame:Destroy()
+				frame = nil
+			end
+			if backdrop then
+				backdrop:Destroy()
+				backdrop = nil
+			end
 		end
 
 		local function count(t)
@@ -399,8 +401,7 @@ function library:CreateWindow(options)
 			end
 
 			if frame then
-				frame:Destroy();
-				frame = nil;
+				closeDropdown()
 				return
 			end
 			
@@ -410,6 +411,20 @@ function library:CreateWindow(options)
 			local maxVisibleItems = 6
 			local displayItems = math.min(totalCount, maxVisibleItems)
 			local frameHeight = displayItems * itemHeight
+
+			backdrop = library:Create('TextButton', {
+				Name = 'DropdownBackdrop',
+				Size = UDim2.new(1, 0, 1, 0),
+				Position = UDim2.new(0, 0, 0, 0),
+				BackgroundTransparency = 1,
+				Text = '',
+				ZIndex = 14,
+				Parent = library.gui,
+			})
+
+			backdrop.MouseButton1Down:connect(function()
+				closeDropdown()
+			end)
 
 			frame = library:Create('ScrollingFrame', {
 				Position = UDim2.new(1, 5, 0, 0);
@@ -451,34 +466,19 @@ function library:CreateWindow(options)
 					ZIndex = 16;
 				})
 				
-				selection.Activated:connect(function()
+				selection.MouseButton1Click:connect(function()
 					dropdown.Text = option;
 					callback(option)
-					if frame then
-						frame:Destroy();
-						frame = nil;
-					end
+					closeDropdown()
 				end)
 			end
 		end);
-
-		game:GetService('UserInputService').InputBegan:connect(function(m)
-			if m.UserInputType == Enum.UserInputType.MouseButton1 or m.UserInputType == Enum.UserInputType.Touch then
-				if frame and (not isInGui(frame)) and (not isInGui(dropdown)) then
-					frame:Destroy();
-					frame = nil;
-				end
-			end
-		end)
 		
 		callback(default);
 		self:Resize()
 		return {
 			Refresh = function(self, array, newDefault)
-				if frame then
-					frame:Destroy();
-					frame = nil;
-				end
+				closeDropdown()
 				options = array
 				local nextVal = newDefault or options[1] or ''
 				dropdown.Text = nextVal
