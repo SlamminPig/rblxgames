@@ -407,16 +407,16 @@ function library:CreateWindow(options)
 			self.container.ClipsDescendants = false;
 
 			local itemHeight = 21
-			local maxVisibleItems = 5
+			local maxVisibleItems = 6
 			local displayItems = math.min(totalCount, maxVisibleItems)
 			local frameHeight = displayItems * itemHeight
 
 			frame = library:Create('ScrollingFrame', {
-				Position = UDim2.new(0, 0, 1, 0);
-				BackgroundColor3 = Color3.fromRGB(40, 40, 40);
+				Position = UDim2.new(1, 5, 0, 0);
+				BackgroundColor3 = Color3.fromRGB(30, 30, 30);
 				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight);
-				CanvasSize = UDim2.new(0, 0, 0, (totalCount * itemHeight) + 5);
-				ScrollBarThickness = 5;
+				CanvasSize = UDim2.new(0, 0, 0, totalCount * itemHeight);
+				ScrollBarThickness = 4;
 				ScrollBarImageColor3 = Color3.fromRGB(0, 255, 140);
 				BorderSizePixel = 0;
 				ScrollingEnabled = true;
@@ -426,7 +426,7 @@ function library:CreateWindow(options)
 				ElasticBehavior = Enum.ElasticBehavior.WhenScrollable;
 				Parent = dropdown;
 				ClipsDescendants = true;
-				ZIndex = 10;
+				ZIndex = 15;
 			})
 			
 			library:Create('UIListLayout', {
@@ -439,16 +439,16 @@ function library:CreateWindow(options)
 				local selection = library:Create('TextButton', {
 					Text = option;
 					BackgroundColor3 = Color3.fromRGB(40, 40, 40);
-					BackgroundTransparency = .75;
+					BackgroundTransparency = .5;
 					TextColor3 = Color3.fromRGB(255, 255, 255);
 					BorderSizePixel = 0;
 					TextSize = 14;
 					Font = Enum.Font.FredokaOne;
-					Size = UDim2.new(1, -6, 0, itemHeight);
+					Size = UDim2.new(1, -5, 0, itemHeight);
 					LayoutOrder = i;
 					AutoButtonColor = true;
 					Parent = frame;
-					ZIndex = 11;
+					ZIndex = 16;
 				})
 				
 				selection.Activated:connect(function()
@@ -464,7 +464,7 @@ function library:CreateWindow(options)
 
 		game:GetService('UserInputService').InputBegan:connect(function(m)
 			if m.UserInputType == Enum.UserInputType.MouseButton1 or m.UserInputType == Enum.UserInputType.Touch then
-				if frame and (not isInGui(frame)) then
+				if frame and (not isInGui(frame)) and (not isInGui(dropdown)) then
 					frame:Destroy();
 					frame = nil;
 				end
