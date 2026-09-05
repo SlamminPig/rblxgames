@@ -415,7 +415,7 @@ function library:CreateWindow(options)
 				Position = UDim2.new(0, 0, 1, 0);
 				BackgroundColor3 = Color3.fromRGB(40, 40, 40);
 				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight);
-				CanvasSize = UDim2.new(0, 0, 0, totalCount * itemHeight);
+				CanvasSize = UDim2.new(0, 0, 0, (totalCount * itemHeight) + 5);
 				ScrollBarThickness = 5;
 				ScrollBarImageColor3 = Color3.fromRGB(0, 255, 140);
 				BorderSizePixel = 0;
@@ -426,7 +426,7 @@ function library:CreateWindow(options)
 				ElasticBehavior = Enum.ElasticBehavior.WhenScrollable;
 				Parent = dropdown;
 				ClipsDescendants = true;
-				ZIndex = 3;
+				ZIndex = 10;
 			})
 			
 			library:Create('UIListLayout', {
@@ -448,7 +448,7 @@ function library:CreateWindow(options)
 					LayoutOrder = i;
 					AutoButtonColor = true;
 					Parent = frame;
-					ZIndex = 3;
+					ZIndex = 11;
 				})
 				
 				selection.Activated:connect(function()
