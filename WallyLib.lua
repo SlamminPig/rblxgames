@@ -492,7 +492,122 @@ function library:CreateWindow(options)
 		}
 	end
    
-   
+   function window:AddSlider(text, options, callback)
+		self.count = self.count + 1
+
+		local min = options.min or 0
+		local max = options.max or 100
+		local default = math.clamp(options.default or min, min, max)
+		local precise = options.precise or false
+		callback = callback or function() end
+
+		local sliderContainer = library:Create('Frame', {
+			Size = UDim2.new(1, -10, 0, 36);
+			BackgroundTransparency = 1;
+			BorderSizePixel = 0;
+			LayoutOrder = self.Count;
+			Parent = self.container;
+		})
+
+		local titleLabel = library:Create('TextLabel', {
+			Size = UDim2.new(1, -50, 0, 16);
+			Position = UDim2.new(0, 0, 0, 0);
+			BackgroundTransparency = 1;
+			BorderSizePixel = 0;
+			TextColor3 = Color3.fromRGB(255, 255, 255);
+			TextXAlignment = Enum.TextXAlignment.Left;
+			TextSize = 14;
+			Font = Enum.Font.FredokaOne;
+			Text = text;
+			Parent = sliderContainer;
+		})
+
+		local valueLabel = library:Create('TextLabel', {
+			Size = UDim2.new(0, 50, 0, 16);
+			Position = UDim2.new(1, -50, 0, 0);
+			BackgroundTransparency = 1;
+			BorderSizePixel = 0;
+			TextColor3 = Color3.fromRGB(0, 255, 140);
+			TextXAlignment = Enum.TextXAlignment.Right;
+			TextSize = 14;
+			Font = Enum.Font.FredokaOne;
+			Text = tostring(default);
+			Parent = sliderContainer;
+		})
+
+		local barBack = library:Create('TextButton', {
+			Size = UDim2.new(1, 0, 0, 14);
+			Position = UDim2.new(0, 0, 0, 18);
+			BackgroundColor3 = Color3.fromRGB(40, 40, 40);
+			BackgroundTransparency = .75;
+			BorderSizePixel = 0;
+			AutoButtonColor = false;
+			Text = '';
+			Parent = sliderContainer;
+		})
+
+		local fillBar = library:Create('Frame', {
+			Size = UDim2.new((default - min) / (max - min), 0, 1, 0);
+			Position = UDim2.new(0, 0, 0, 0);
+			BackgroundColor3 = Color3.fromRGB(0, 255, 140);
+			BorderSizePixel = 0;
+			Parent = barBack;
+		})
+
+		local dragging = false
+		local UserInputService = game:GetService('UserInputService')
+
+		local function update(input)
+			local barPos = barBack.AbsolutePosition.X
+			local barSize = barBack.AbsoluteSize.X
+			local mouseX = input.Position.X
+			local percent = math.clamp((mouseX - barPos) / barSize, 0, 1)
+
+			local value = min + ((max - min) * percent)
+			if not precise then
+				value = math.floor(value + .5)
+			else
+				value = math.floor(value * 100) / 100
+			end
+
+			fillBar.Size = UDim2.new(percent, 0, 1, 0)
+			valueLabel.Text = tostring(value)
+			callback(value)
+		end
+
+		barBack.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				update(input)
+			end
+		end)
+
+		UserInputService.InputChanged:Connect(function(input)
+			if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				update(input)
+			end
+		end)
+
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = false
+			end
+		end)
+
+		callback(default)
+		self:Resize()
+
+		return {
+			Set = function(self, val)
+				local clamped = math.clamp(val, min, max)
+				local percent = (clamped - min) / (max - min)
+				fillBar.Size = UDim2.new(percent, 0, 1, 0)
+				valueLabel.Text = tostring(clamped)
+				callback(clamped)
+			end
+		}
+	end
+	
 	return window
 end
 
