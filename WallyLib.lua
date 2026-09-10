@@ -344,10 +344,9 @@ function library:CreateWindow(options)
 
 		if type(default) == 'function' then
 			callback = default
-			default = options[1] or ''
+			default = nil
 		end
 
-		default = default or options[1] or ''
 		callback = callback or function() end
 
 		local dropdown = library:Create('TextLabel', {
@@ -357,7 +356,7 @@ function library:CreateWindow(options)
 			TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextXAlignment = Enum.TextXAlignment.Center;
 			TextSize = 14,
-			Text = default,
+			Text = default or 'Select...',
 			Font = Enum.Font.FredokaOne,
 			BorderSizePixel = 0;
 			LayoutOrder = self.Count;
@@ -430,7 +429,7 @@ function library:CreateWindow(options)
 				Position = UDim2.new(1, 5, 0, 0);
 				BackgroundColor3 = Color3.fromRGB(30, 30, 30);
 				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight);
-				CanvasSize = UDim2.new(0, 0, 0, totalCount * itemHeight);
+				CanvasSize = UDim2.new(0, 0, 0, (totalCount * itemHeight) + 5);
 				ScrollBarThickness = 4;
 				ScrollBarImageColor3 = Color3.fromRGB(0, 255, 140);
 				BorderSizePixel = 0;
@@ -474,15 +473,21 @@ function library:CreateWindow(options)
 			end
 		end);
 		
-		callback(default);
+		if default ~= nil then
+			callback(default);
+		end
+
 		self:Resize()
 		return {
 			Refresh = function(self, array, newDefault)
 				closeDropdown()
 				options = array
-				local nextVal = newDefault or options[1] or ''
-				dropdown.Text = nextVal
-				callback(nextVal)
+				if newDefault ~= nil then
+					dropdown.Text = newDefault
+					callback(newDefault)
+				else
+					dropdown.Text = 'Select...'
+				end
 			end
 		}
 	end
