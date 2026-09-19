@@ -6,35 +6,47 @@ local dragger = {};
 local resizer = {};
 
 do
-	local mouse = game:GetService('Players').LocalPlayer:GetMouse();
-	local inputService = game:GetService('UserInputService');
-	local heartbeat = game:GetService('RunService').Heartbeat;
-	function dragger.new(frame)
-		local s, event = pcall(function()
-			return frame.MouseEnter
-		end)
+	local inputService = game:GetService('UserInputService')
+		function dragger.new(frame)
+			frame.Active = true
 
-		if s then
-			frame.Active = true;
+			local dragging = false
+			local dragInput = nil
+			local dragStart = nil
+			local startPos = nil
 
-			event:connect(function()
-				local input = frame.InputBegan:connect(function(key)
-					if key.UserInputType == Enum.UserInputType.MouseButton1 or key.UserInputType == Enum.UserInputType.Touch then
-						local objectPosition = Vector2.new(mouse.X - frame.AbsolutePosition.X, mouse.Y - frame.AbsolutePosition.Y);
-						while heartbeat:wait() and inputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-							frame:TweenPosition(UDim2.new(0, mouse.X - objectPosition.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 0, mouse.Y - objectPosition.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)), 'Out', 'Quad', 0.1, true);
+			frame.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					dragging = true
+					dragStart = input.Position
+					startPos = frame.Position
+
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragging = false
 						end
-					end
-				end)
+					end)
+				end
+			end)
 
-				local leave;
-				leave = frame.MouseLeave:connect(function()
-					input:disconnect();
-					leave:disconnect();
-				end)
+			frame.InputChanged:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+					dragInput = input
+				end
+			end)
+
+			inputService.InputChanged:Connect(function(input)
+				if input == dragInput and dragging then
+					local delta = input.Position - dragStart
+					frame.Position = UDim2.new(
+						startPos.X.Scale,
+						startPos.X.Offset + delta.X,
+						startPos.Y.Scale,
+						startPos.Y.Offset + delta.Y
+					)
+				end
 			end)
 		end
-	end
    
 	function resizer.new(p, s)
 		p:GetPropertyChangedSignal('AbsoluteSize'):connect(function()
