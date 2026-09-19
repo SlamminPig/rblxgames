@@ -348,6 +348,7 @@ function library:CreateWindow(options)
 		end
 
 		callback = callback or function() end
+		local currentSelected = default
 
 		local dropdown = library:Create('TextLabel', {
 			Size = UDim2.new(1, -10, 0, 20);
@@ -449,12 +450,18 @@ function library:CreateWindow(options)
 				Parent = frame;
 			})
 
+			local selectedIndex = nil
+
 			for i, option in next, options do
+				if option == currentSelected then
+					selectedIndex = i
+				end
+
 				local selection = library:Create('TextButton', {
 					Text = option;
 					BackgroundColor3 = Color3.fromRGB(40, 40, 40);
-					BackgroundTransparency = .5;
-					TextColor3 = Color3.fromRGB(255, 255, 255);
+					BackgroundTransparency = (option == currentSelected and .25) or .5;
+					TextColor3 = (option == currentSelected and Color3.fromRGB(0, 255, 140)) or Color3.fromRGB(255, 255, 255);
 					BorderSizePixel = 0;
 					TextSize = 14;
 					Font = Enum.Font.FredokaOne;
@@ -466,10 +473,17 @@ function library:CreateWindow(options)
 				})
 				
 				selection.MouseButton1Click:connect(function()
+					currentSelected = option
 					dropdown.Text = option;
 					callback(option)
 					closeDropdown()
 				end)
+			end
+
+			if selectedIndex then
+				local maxScroll = math.max(0, (totalCount * itemHeight + 5) - frameHeight)
+				local targetY = math.clamp((selectedIndex - 1) * itemHeight, 0, maxScroll)
+				frame.CanvasPosition = Vector2.new(0, targetY)
 			end
 		end);
 		
@@ -483,9 +497,11 @@ function library:CreateWindow(options)
 				closeDropdown()
 				options = array
 				if newDefault ~= nil then
+					currentSelected = newDefault
 					dropdown.Text = newDefault
 					callback(newDefault)
 				else
+					currentSelected = nil
 					dropdown.Text = 'Select...'
 				end
 			end
