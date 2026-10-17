@@ -247,7 +247,7 @@ function library:CreateWindow(options)
 			BackgroundTransparency = 1;
 			TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextXAlignment = Enum.TextXAlignment.Left;
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			TextSize = 14,
 			Font = Enum.Font.FredokaOne,
 			Parent = self.container;
@@ -287,13 +287,13 @@ function library:CreateWindow(options)
 			Size = UDim2.new(1, -10, 0, 20);
 			--Position = UDim2.new(0, 5, 0, ((20 * self.count) - 20) + 5),
 			BackgroundTransparency = 0.75;
-			BackgroundColor3 = options.boxcolor,
+			BackgroundColor3 = options.boxcolor or Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextXAlignment = Enum.TextXAlignment.Center;
 			TextSize = 14,
 			Text = '',
 			Font = Enum.Font.FredokaOne,
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			BorderSizePixel = 0;
 			Parent = self.container;
 		})
@@ -320,7 +320,7 @@ function library:CreateWindow(options)
 			TextSize = 14,
 			Font = Enum.Font.FredokaOne,
 			BorderSizePixel = 0;
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			Parent = self.container;
 		})
 
@@ -343,7 +343,7 @@ function library:CreateWindow(options)
 			TextXAlignment = Enum.TextXAlignment.Left;
 			TextSize = 14,
 			Font = Enum.Font.FredokaOne,
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			Parent = self.container;
 		})
 
@@ -372,7 +372,7 @@ function library:CreateWindow(options)
 			Text = default or 'Select...',
 			Font = Enum.Font.FredokaOne,
 			BorderSizePixel = 0;
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			Parent = self.container;
 		})
 		
@@ -533,7 +533,7 @@ function library:CreateWindow(options)
 			Size = UDim2.new(1, -10, 0, 36);
 			BackgroundTransparency = 1;
 			BorderSizePixel = 0;
-			LayoutOrder = self.Count;
+			LayoutOrder = self.count;
 			Parent = self.container;
 		})
 
@@ -637,6 +637,274 @@ function library:CreateWindow(options)
 	end
 	
 	return window
+end
+
+do
+    local TweenService = game:GetService("TweenService")
+    local TextService = game:GetService("TextService")
+
+    library.NotifySettings = {
+        Width       = 250,
+        MaxVisible  = 5,
+        Bar         = Color3.fromRGB(40, 40, 40),
+        Background  = Color3.fromRGB(30, 30, 30),
+        TitleColor  = Color3.fromRGB(255, 255, 255),
+        TextColor   = Color3.fromRGB(200, 200, 200),
+        Font        = Enum.Font.FredokaOne,
+        Types = {
+            default = Color3.fromRGB(0, 255, 140),
+            success = Color3.fromRGB(0, 255, 140),
+            info    = Color3.fromRGB(70, 160, 255),
+            warning = Color3.fromRGB(255, 190, 40),
+            error   = Color3.fromRGB(255, 25, 25),
+        },
+    }
+
+    local holder
+    local active = {}
+    local order = 0
+
+    local function new(class, props)
+        local obj = Instance.new(class)
+        for k, v in pairs(props) do
+            if k ~= "Parent" then obj[k] = v end
+        end
+        if props.Parent then obj.Parent = props.Parent end
+        return obj
+    end
+
+    local function getHolder()
+        if holder and holder.Parent and holder.Parent.Parent then
+            return holder
+        end
+        local gui = new("ScreenGui", {
+            Name = "UILibraryNotifications",
+            ResetOnSpawn = false,
+            DisplayOrder = 999,
+            ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+            Parent = (library.gui and library.gui.Parent) or game:GetService("CoreGui"),
+        })
+        holder = new("Frame", {
+            Name = "Holder",
+            AnchorPoint = Vector2.new(1, 1),
+            Position = UDim2.new(1, -12, 1, -12),
+            Size = UDim2.new(0, library.NotifySettings.Width, 1, -24),
+            BackgroundTransparency = 1,
+            Parent = gui,
+        })
+        new("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            VerticalAlignment = Enum.VerticalAlignment.Bottom,
+            Padding = UDim.new(0, 6),
+            Parent = holder,
+        })
+        return holder
+    end
+
+    function library:Notify(title, text, duration)
+        local s = library.NotifySettings
+        local opts
+        if type(title) == "table" then
+            opts = title
+        else
+            opts = { Title = title, Text = text, Duration = duration }
+        end
+
+        local ntype = string.lower(tostring(opts.Type or "default"))
+        local accent = opts.Color or s.Types[ntype] or s.Types.default
+        local dur = opts.Duration
+        if dur == nil then dur = 5 end
+        local persistent = (dur <= 0 or dur == math.huge)
+        local buttons = opts.Buttons
+        if buttons and #buttons == 0 then buttons = nil end
+        local body = tostring(opts.Text or "")
+        local width = s.Width
+
+        local textH = 0
+        if body ~= "" then
+            textH = TextService:GetTextSize(body, 14, s.Font, Vector2.new(width - 16, 10000)).Y
+        end
+        local height = 28
+        if textH > 0 then height = height + 8 + textH end
+        if buttons then height = height + 8 + 24 end
+        height = height + 8
+        if not persistent then height = height + 2 end
+
+        order = order + 1
+        local parent = getHolder()
+
+        local slot = new("Frame", {
+            Name = "Notification",
+            Size = UDim2.new(1, 0, 0, 0),
+            BackgroundTransparency = 1,
+            LayoutOrder = order,
+            Parent = parent,
+        })
+
+        local card = new("Frame", {
+            Name = "Card",
+            Size = UDim2.new(1, 0, 0, height),
+            Position = UDim2.new(1, 20, 0, 0),
+            BackgroundColor3 = s.Background,
+            BorderSizePixel = 0,
+            Active = true,
+            Parent = slot,
+        })
+
+        local bar = new("Frame", {
+            Name = "Bar",
+            Size = UDim2.new(1, 0, 0, 26),
+            BackgroundColor3 = s.Bar,
+            BorderSizePixel = 0,
+            Parent = card,
+        })
+
+        new("TextLabel", {
+            Name = "Title",
+            Position = UDim2.new(0, 8, 0, 0),
+            Size = UDim2.new(1, -34, 1, 0),
+            BackgroundTransparency = 1,
+            Text = tostring(opts.Title or "Notification"),
+            TextColor3 = s.TitleColor,
+            Font = s.Font,
+            TextSize = 15,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            Parent = bar,
+        })
+
+        local closeBtn = new("TextButton", {
+            Name = "Close",
+            Position = UDim2.new(1, -26, 0, 0),
+            Size = UDim2.new(0, 26, 0, 26),
+            BackgroundTransparency = 1,
+            Text = "x",
+            TextColor3 = s.TitleColor,
+            Font = s.Font,
+            TextSize = 17,
+            Parent = bar,
+        })
+
+        new("Frame", {
+            Name = "Underline",
+            Position = UDim2.new(0, 0, 0, 26),
+            Size = UDim2.new(1, 0, 0, 2),
+            BackgroundColor3 = accent,
+            BorderSizePixel = 0,
+            Parent = card,
+        })
+
+        local y = 28
+        if textH > 0 then
+            new("TextLabel", {
+                Name = "Body",
+                Position = UDim2.new(0, 8, 0, y + 8),
+                Size = UDim2.new(1, -16, 0, textH),
+                BackgroundTransparency = 1,
+                Text = body,
+                TextColor3 = s.TextColor,
+                Font = s.Font,
+                TextSize = 14,
+                TextWrapped = true,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                Parent = card,
+            })
+            y = y + 8 + textH
+        end
+
+        local notif = {}
+        local closed = false
+        local timer
+
+        function notif:Close()
+            if closed then return end
+            closed = true
+            if timer then timer:Cancel() end
+            for i, v in ipairs(active) do
+                if v == notif then table.remove(active, i) break end
+            end
+            task.spawn(function()
+                local out = TweenService:Create(card, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                    Position = UDim2.new(1, 20, 0, 0),
+                })
+                out:Play()
+                out.Completed:Wait()
+                local shrink = TweenService:Create(slot, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(1, 0, 0, 0),
+                })
+                shrink:Play()
+                shrink.Completed:Wait()
+                slot:Destroy()
+            end)
+        end
+
+        if buttons then
+            local n = #buttons
+            local bw = (width - 16 - 6 * (n - 1)) / n
+            for i, label in ipairs(buttons) do
+                local b = new("TextButton", {
+                    Name = "Button_" .. tostring(label),
+                    Position = UDim2.new(0, 8 + (i - 1) * (bw + 6), 0, y + 8),
+                    Size = UDim2.new(0, bw, 0, 24),
+                    BackgroundColor3 = s.Bar,
+                    BorderSizePixel = 0,
+                    AutoButtonColor = false,
+                    Text = tostring(label),
+                    TextColor3 = s.TitleColor,
+                    Font = s.Font,
+                    TextSize = 14,
+                    Parent = card,
+                })
+                b.MouseEnter:Connect(function() b.TextColor3 = accent end)
+                b.MouseLeave:Connect(function() b.TextColor3 = s.TitleColor end)
+                b.MouseButton1Click:Connect(function()
+                    if closed then return end
+                    if opts.Callback then task.spawn(opts.Callback, label) end
+                    notif:Close()
+                end)
+            end
+        end
+
+        closeBtn.MouseButton1Click:Connect(function()
+            notif:Close()
+        end)
+
+        if not persistent then
+            local progress = new("Frame", {
+                Name = "Progress",
+                AnchorPoint = Vector2.new(0, 1),
+                Position = UDim2.new(0, 0, 1, 0),
+                Size = UDim2.new(1, 0, 0, 2),
+                BackgroundColor3 = accent,
+                BorderSizePixel = 0,
+                Parent = card,
+            })
+            timer = TweenService:Create(progress, TweenInfo.new(dur, Enum.EasingStyle.Linear), {
+                Size = UDim2.new(0, 0, 0, 2),
+            })
+            timer.Completed:Connect(function(state)
+                if state == Enum.PlaybackState.Completed then notif:Close() end
+            end)
+            card.MouseEnter:Connect(function() if not closed then timer:Pause() end end)
+            card.MouseLeave:Connect(function() if not closed then timer:Play() end end)
+        end
+
+        TweenService:Create(slot, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(1, 0, 0, height),
+        }):Play()
+        TweenService:Create(card, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Position = UDim2.new(0, 0, 0, 0),
+        }):Play()
+        if timer then timer:Play() end
+
+        table.insert(active, notif)
+        while #active > s.MaxVisible do
+            active[1]:Close()
+        end
+
+        return notif
+    end
 end
 
 return library
