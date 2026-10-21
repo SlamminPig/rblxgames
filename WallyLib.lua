@@ -929,6 +929,8 @@ do
 		Background = Color3.fromRGB(30, 30, 30),
 		TitleColor = Color3.fromRGB(255, 255, 255),
 		TextColor = Color3.fromRGB(200, 200, 200),
+		TimeColor = Color3.fromRGB(140, 140, 140),
+		Timestamp = true,
 		Font = Enum.Font.FredokaOne,
 		Types = {
 			default = Color3.fromRGB(0, 255, 140),
@@ -942,6 +944,15 @@ do
 	local holder
 	local active = {}
 	local order = 0
+
+	function library:GetTime()
+		local t = os.date('*t')
+		local hour = t.hour % 12
+		if hour == 0 then
+			hour = 12
+		end
+		return string.format('%d:%02d %s', hour, t.min, t.hour >= 12 and 'PM' or 'AM')
+	end
 
 	local function getHolder()
 		if holder and library.notifygui and holder.Parent == library.notifygui then
@@ -1042,10 +1053,34 @@ do
 			Parent = card,
 		})
 
+		local showTime = opts.Timestamp
+		if showTime == nil then
+			showTime = s.Timestamp
+		end
+		local titleRight = 34
+		if showTime then
+			local timeText = library:GetTime()
+			local timeW = TextService:GetTextSize(timeText, 13, s.Font, Vector2.new(math.huge, math.huge)).X
+			library:Create('TextLabel', {
+				Name = 'Time',
+				AnchorPoint = Vector2.new(1, 0),
+				Position = UDim2.new(1, -28, 0, 0),
+				Size = UDim2.new(0, timeW, 1, 0),
+				BackgroundTransparency = 1,
+				Text = timeText,
+				TextColor3 = s.TimeColor,
+				Font = s.Font,
+				TextSize = 13,
+				TextXAlignment = Enum.TextXAlignment.Right,
+				Parent = bar,
+			})
+			titleRight = titleRight + timeW + 6
+		end
+
 		library:Create('TextLabel', {
 			Name = 'Title',
 			Position = UDim2.new(0, 8, 0, 0),
-			Size = UDim2.new(1, -34, 1, 0),
+			Size = UDim2.new(1, -titleRight, 1, 0),
 			BackgroundTransparency = 1,
 			Text = tostring(opts.Title or 'Notification'),
 			TextColor3 = s.TitleColor,
