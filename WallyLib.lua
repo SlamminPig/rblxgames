@@ -526,9 +526,13 @@ function library:CreateWindow(options)
 		return box
 	end
 
-	function window:AddButton(text, callback)
+	function window:AddButton(text, callback, buttonOpts)
 		self.count = self.count + 1
 
+		if type(callback) == 'table' then
+			callback, buttonOpts = buttonOpts, callback
+		end
+		buttonOpts = buttonOpts or {}
 		callback = callback or function() end
 		local button = library:Create('TextButton', {
 			Text = text,
@@ -544,7 +548,40 @@ function library:CreateWindow(options)
 			Parent = self.container;
 		})
 
-		button.MouseButton1Click:Connect(callback)
+		if buttonOpts.DoubleClick then
+			local confirmText = buttonOpts.ConfirmText or 'Click again to confirm'
+			local timeout = buttonOpts.Timeout or 2
+			local armed = false
+			local armId = 0
+
+			local function disarm()
+				armed = false
+				armId = armId + 1
+				button.Text = text
+				button.TextColor3 = Color3.fromRGB(255, 255, 255)
+			end
+
+			button.MouseButton1Click:Connect(function()
+				if armed then
+					disarm()
+					callback()
+					return
+				end
+				armed = true
+				armId = armId + 1
+				local myId = armId
+				button.Text = confirmText
+				button.TextColor3 = Color3.fromRGB(255, 190, 40)
+				task.delay(timeout, function()
+					if armed and armId == myId and button.Parent then
+						disarm()
+					end
+				end)
+			end)
+		else
+			button.MouseButton1Click:Connect(callback)
+		end
+
 		self:Resize()
 		return button
 	end
