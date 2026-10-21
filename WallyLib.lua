@@ -21,7 +21,10 @@ local function canUseFiles()
 	return type(writefile) == 'function' and type(readfile) == 'function' and type(isfile) == 'function'
 end
 
-function library:_register(key, element)
+function library:_register(key, element, nosave)
+	if nosave then
+		return
+	end
 	self.elements[key] = element
 end
 
@@ -177,6 +180,21 @@ for _, name in ipairs({'UILibrary', 'UILibraryNotifications'}) do
 end
 _G.WallyLib = library
 
+library.ToggleKey = Enum.KeyCode.RightControl
+
+function library:SetToggleKey(key)
+	self.ToggleKey = key
+end
+
+library:Connect(UserInputService.InputBegan, function(input)
+	if UserInputService:GetFocusedTextBox() then
+		return
+	end
+	if library.ToggleKey and input.KeyCode == library.ToggleKey and library.gui then
+		library.gui.Enabled = not library.gui.Enabled
+	end
+end)
+
 local dragger = {};
 local resizer = {};
 
@@ -306,6 +324,7 @@ function library:CreateWindow(options)
 
 	window.organizer = self:Create('UIListLayout', {
 		Name = 'Sorter';
+		Padding = UDim.new(0, 2);
 		SortOrder = Enum.SortOrder.LayoutOrder;
 		Parent = window.container;
 	})
@@ -397,10 +416,15 @@ function library:CreateWindow(options)
 
 	local function getSize()
 		local ySize = 0;
+		local items = 0;
 		for _, object in next, window.container:GetChildren() do
-			if (not object:IsA('UIListLayout')) and (not object:IsA('UIPadding')) then
+			if object:IsA('GuiObject') then
 				ySize = ySize + object.AbsoluteSize.Y
+				items = items + 1
 			end
+		end
+		if items > 1 then
+			ySize = ySize + window.organizer.Padding.Offset * (items - 1)
 		end
 		return UDim2.new(1, 0, 0, ySize + 10)
 	end
@@ -418,13 +442,15 @@ function library:CreateWindow(options)
 		end
 	end
 
-	function window:AddToggle(text, default, callback)
+	function window:AddToggle(text, default, callback, toggleOpts)
 		self.count = self.count + 1
 
 		if type(default) == 'function' then
+			toggleOpts = callback
 			callback = default
 			default = false
 		end
+		toggleOpts = type(toggleOpts) == 'table' and toggleOpts or {}
 
 		default = default and true or false
 		callback = callback or function() end
@@ -479,14 +505,15 @@ function library:CreateWindow(options)
 				return self.toggles[text]
 			end,
 		}
-		library:_register(options.text .. '/' .. text, toggle)
+		library:_register(options.text .. '/' .. text, toggle, toggleOpts.NoSave)
 
 		self:Resize()
 		return button, toggle
 	end
 
-	function window:AddBox(text, callback)
+	function window:AddBox(text, callback, boxOpts)
 		self.count = self.count + 1
+		boxOpts = boxOpts or {}
 		callback = callback or function() end
 
 		local box = library:Create('TextBox', {
@@ -520,7 +547,7 @@ function library:CreateWindow(options)
 			Get = function()
 				return box.Text
 			end,
-		})
+		}, boxOpts.NoSave)
 
 		self:Resize()
 		return box
@@ -537,8 +564,9 @@ function library:CreateWindow(options)
 		local button = library:Create('TextButton', {
 			Text = text,
 			Size = UDim2.new(1, -10, 0, 20);
-			BackgroundTransparency = .75;
-			BackgroundColor3 = options.boxcolor or Color3.fromRGB(40, 40, 40);
+			BackgroundTransparency = .6;
+			AutoButtonColor = false;
+			BackgroundColor3 = options.boxcolor or Color3.fromRGB(60, 60, 60);
 			TextColor3 = Color3.fromRGB(255, 255, 255);
 			TextXAlignment = Enum.TextXAlignment.Center;
 			TextSize = 14,
@@ -547,6 +575,23 @@ function library:CreateWindow(options)
 			LayoutOrder = self.count;
 			Parent = self.container;
 		})
+
+		local hovering = false
+		local hoverInfo = TweenInfo.new(0.12, Enum.EasingStyle.Quad)
+		button.MouseEnter:Connect(function()
+			hovering = true
+			TweenService:Create(button, hoverInfo, {BackgroundTransparency = .35}):Play()
+		end)
+		button.MouseLeave:Connect(function()
+			hovering = false
+			TweenService:Create(button, hoverInfo, {BackgroundTransparency = .6}):Play()
+		end)
+		button.MouseButton1Down:Connect(function()
+			button.BackgroundTransparency = .1
+		end)
+		button.MouseButton1Up:Connect(function()
+			TweenService:Create(button, hoverInfo, {BackgroundTransparency = hovering and .35 or .6}):Play()
+		end)
 
 		if buttonOpts.DoubleClick then
 			local confirmText = buttonOpts.ConfirmText or 'Click again to confirm'
@@ -586,6 +631,41 @@ function library:CreateWindow(options)
 		return button
 	end
 
+	function window:AddSection(text)
+		self.count = self.count + 1
+
+		local section = library:Create('Frame', {
+			Name = 'Section',
+			Size = UDim2.new(1, -10, 0, 24);
+			BackgroundTransparency = 1;
+			LayoutOrder = self.count;
+			Parent = self.container;
+		})
+
+		library:Create('TextLabel', {
+			Text = text,
+			Size = UDim2.new(1, 0, 0, 16);
+			Position = UDim2.new(0, 0, 0, 5);
+			BackgroundTransparency = 1;
+			TextColor3 = Color3.fromRGB(140, 140, 140);
+			TextXAlignment = Enum.TextXAlignment.Left;
+			TextSize = 13,
+			Font = Enum.Font.FredokaOne,
+			Parent = section;
+		})
+
+		library:Create('Frame', {
+			Size = UDim2.new(1, 0, 0, 1);
+			Position = UDim2.new(0, 0, 1, -2);
+			BackgroundColor3 = Color3.fromRGB(60, 60, 60);
+			BorderSizePixel = 0;
+			Parent = section;
+		})
+
+		self:Resize()
+		return section
+	end
+
 	function window:AddLabel(text)
 		self.count = self.count + 1;
 
@@ -608,13 +688,15 @@ function library:CreateWindow(options)
 		return label
 	end
 
-	function window:AddDropdown(list, default, callback)
+	function window:AddDropdown(list, default, callback, dropdownOpts)
 		self.count = self.count + 1
 
 		if type(default) == 'function' then
+			dropdownOpts = callback
 			callback = default
 			default = nil
 		end
+		dropdownOpts = type(dropdownOpts) == 'table' and dropdownOpts or {}
 
 		list = list or {}
 		callback = callback or function() end
@@ -634,13 +716,47 @@ function library:CreateWindow(options)
 			Parent = self.container;
 		})
 
+		local opener = library:Create('TextButton', {
+			BackgroundTransparency = 1;
+			Text = '';
+			Size = UDim2.new(1, 0, 1, 0);
+			ZIndex = 1;
+			Parent = dropdown;
+		})
+
 		local button = library:Create('ImageButton', {
 			BackgroundTransparency = 1;
 			Image = 'rbxassetid://3234893186';
 			Size = UDim2.new(0, 18, 1, 0);
 			Position = UDim2.new(1, -20, 0, 0);
+			ZIndex = 2;
 			Parent = dropdown;
 		})
+
+		local clearButton = library:Create('TextButton', {
+			BackgroundTransparency = 1;
+			Text = 'x';
+			TextColor3 = Color3.fromRGB(160, 160, 160);
+			TextSize = 15;
+			Font = Enum.Font.FredokaOne;
+			Size = UDim2.new(0, 16, 1, 0);
+			Position = UDim2.new(1, -38, 0, 0);
+			Visible = currentSelected ~= nil;
+			ZIndex = 2;
+			Parent = dropdown;
+		})
+
+		clearButton.MouseEnter:Connect(function()
+			clearButton.TextColor3 = Color3.fromRGB(255, 25, 25)
+		end)
+		clearButton.MouseLeave:Connect(function()
+			clearButton.TextColor3 = Color3.fromRGB(160, 160, 160)
+		end)
+
+		local function updateClear()
+			clearButton.Visible = currentSelected ~= nil and dropdownOpts.AllowNull == true
+		end
+		updateClear()
 
 		local frame;
 		local backdrop;
@@ -668,7 +784,21 @@ function library:CreateWindow(options)
 			return c;
 		end
 
-		button.MouseButton1Click:Connect(function()
+		local function clearSelection()
+			closeDropdown()
+			if currentSelected == nil then
+				return
+			end
+			currentSelected = nil
+			dropdown.Text = 'Select...'
+			updateClear()
+			callback(nil)
+			library:_queueSave()
+		end
+
+		clearButton.MouseButton1Click:Connect(clearSelection)
+
+		local function toggleDropdown()
 			if frame then
 				closeDropdown()
 				return
@@ -704,10 +834,22 @@ function library:CreateWindow(options)
 				closeDropdown()
 			end)
 
-			frame = library:Create('ScrollingFrame', {
+			local searchHeight = dropdownOpts.Search and 24 or 0
+
+			frame = library:Create('Frame', {
 				Position = UDim2.new(1, 5, 0, 0);
 				BackgroundColor3 = Color3.fromRGB(30, 30, 30);
-				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight);
+				Size = UDim2.new(0, dropdown.AbsoluteSize.X, 0, frameHeight + searchHeight);
+				BorderSizePixel = 0;
+				Active = true;
+				Parent = dropdown;
+				ZIndex = 15;
+			})
+
+			local scroll = library:Create('ScrollingFrame', {
+				Position = UDim2.new(0, 0, 0, searchHeight);
+				Size = UDim2.new(1, 0, 0, frameHeight);
+				BackgroundTransparency = 1;
 				CanvasSize = UDim2.new(0, 0, 0, (totalCount * itemHeight) + 5);
 				ScrollBarThickness = 4;
 				ScrollBarImageColor3 = Color3.fromRGB(0, 255, 140);
@@ -717,7 +859,7 @@ function library:CreateWindow(options)
 				Active = true;
 				Selectable = false;
 				ElasticBehavior = Enum.ElasticBehavior.WhenScrollable;
-				Parent = dropdown;
+				Parent = frame;
 				ClipsDescendants = true;
 				ZIndex = 15;
 			})
@@ -725,9 +867,19 @@ function library:CreateWindow(options)
 			library:Create('UIListLayout', {
 				Name = 'Layout';
 				SortOrder = Enum.SortOrder.LayoutOrder;
-				Parent = frame;
+				Parent = scroll;
 			})
 
+			local function choose(option)
+				currentSelected = option
+				updateClear()
+				dropdown.Text = tostring(option);
+				callback(option)
+				closeDropdown()
+				library:_queueSave()
+			end
+
+			local entries = {}
 			local selectedIndex = nil
 			local position = 0
 
@@ -748,31 +900,86 @@ function library:CreateWindow(options)
 					Size = UDim2.new(1, -5, 0, itemHeight);
 					LayoutOrder = position;
 					AutoButtonColor = true;
-					Parent = frame;
+					Parent = scroll;
 					ZIndex = 16;
 				})
 
+				table.insert(entries, {button = selection, option = option, text = tostring(option):lower()})
+
 				selection.MouseButton1Click:Connect(function()
-					currentSelected = option
-					dropdown.Text = tostring(option);
-					callback(option)
-					closeDropdown()
-					library:_queueSave()
+					choose(option)
 				end)
 			end
 
 			if selectedIndex then
 				local maxScroll = math.max(0, (totalCount * itemHeight + 5) - frameHeight)
 				local targetY = math.clamp((selectedIndex - 1) * itemHeight, 0, maxScroll)
-				frame.CanvasPosition = Vector2.new(0, targetY)
+				scroll.CanvasPosition = Vector2.new(0, targetY)
 			end
-		end);
+
+			if dropdownOpts.Search then
+				local searchBox = library:Create('TextBox', {
+					Position = UDim2.new(0, 2, 0, 2);
+					Size = UDim2.new(1, -4, 0, 20);
+					BackgroundColor3 = Color3.fromRGB(45, 45, 45);
+					BorderSizePixel = 0;
+					ClearTextOnFocus = false;
+					PlaceholderText = 'Search...';
+					PlaceholderColor3 = Color3.fromRGB(140, 140, 140);
+					Text = '';
+					TextColor3 = Color3.fromRGB(255, 255, 255);
+					TextSize = 14;
+					Font = Enum.Font.FredokaOne;
+					Parent = frame;
+					ZIndex = 16;
+				})
+
+				local function firstVisible()
+					for _, entry in ipairs(entries) do
+						if entry.button.Visible then
+							return entry
+						end
+					end
+				end
+
+				searchBox:GetPropertyChangedSignal('Text'):Connect(function()
+					local query = searchBox.Text:lower()
+					local visible = 0
+					for _, entry in ipairs(entries) do
+						local match = query == '' or entry.text:find(query, 1, true) ~= nil
+						entry.button.Visible = match
+						if match then
+							visible = visible + 1
+						end
+					end
+					scroll.CanvasSize = UDim2.new(0, 0, 0, (visible * itemHeight) + 5)
+					scroll.CanvasPosition = Vector2.new(0, 0)
+				end)
+
+				searchBox.FocusLost:Connect(function(enterPressed)
+					if enterPressed and frame and searchBox.Text ~= '' then
+						local entry = firstVisible()
+						if entry then
+							choose(entry.option)
+						end
+					end
+				end)
+
+				searchBox:CaptureFocus()
+			end
+		end
+
+		button.MouseButton1Click:Connect(toggleDropdown)
+		opener.MouseButton1Click:Connect(toggleDropdown)
 
 		if default ~= nil then
 			callback(default);
 		end
 
 		local dropdownObject = {
+			SetList = function(_, array)
+				list = array or {}
+			end,
 			Refresh = function(_, array, newDefault)
 				closeDropdown()
 				list = array or {}
@@ -784,24 +991,91 @@ function library:CreateWindow(options)
 					currentSelected = nil
 					dropdown.Text = 'Select...'
 				end
+				updateClear()
 				library:_queueSave()
 			end,
 			Set = function(_, value)
 				if value ~= nil and value ~= currentSelected then
 					currentSelected = value
 					dropdown.Text = tostring(value)
+					updateClear()
 					callback(value)
 					library:_queueSave()
 				end
+			end,
+			Clear = function()
+				clearSelection()
 			end,
 			Get = function()
 				return currentSelected
 			end,
 		}
-		library:_register(options.text .. '/dropdown' .. self.count, dropdownObject)
+		library:_register(options.text .. '/dropdown' .. self.count, dropdownObject, dropdownOpts.NoSave)
 
 		self:Resize()
 		return dropdownObject
+	end
+
+	function window:AddPlayerDropdown(callback, dropOpts)
+		dropOpts = dropOpts or {}
+		callback = callback or function() end
+
+		local Players = game:GetService('Players')
+		local localPlayer = Players.LocalPlayer
+
+		local lookup = {}
+
+		local function getNames(leaving)
+			local list = {}
+			for _, plr in ipairs(Players:GetPlayers()) do
+				if plr ~= leaving and (dropOpts.IncludeSelf or plr ~= localPlayer) then
+					table.insert(list, plr)
+				end
+			end
+
+			local seen = {}
+			if dropOpts.DisplayName then
+				for _, plr in ipairs(list) do
+					seen[plr.DisplayName] = (seen[plr.DisplayName] or 0) + 1
+				end
+			end
+
+			local names = {}
+			table.clear(lookup)
+			for _, plr in ipairs(list) do
+				local label = plr.Name
+				if dropOpts.DisplayName then
+					label = plr.DisplayName
+					if seen[label] > 1 then
+						label = label .. ' (@' .. plr.Name .. ')'
+					end
+				end
+				lookup[label] = plr
+				table.insert(names, label)
+			end
+
+			table.sort(names, function(a, b)
+				return a:lower() < b:lower()
+			end)
+			return names
+		end
+
+		if dropOpts.Search == nil then
+			dropOpts.Search = true
+		end
+
+		local dropdown = self:AddDropdown(getNames(), function(name)
+			callback(name, lookup[name])
+		end, dropOpts)
+
+		library:Connect(Players.PlayerAdded, function()
+			dropdown:SetList(getNames())
+		end)
+		library:Connect(Players.PlayerRemoving, function(plr)
+			dropdown:SetList(getNames(plr))
+		end)
+
+		return dropdown
 	end
 
 	function window:AddSlider(text, opts, callback)
@@ -943,7 +1217,7 @@ function library:CreateWindow(options)
 			Get = function()
 				return value
 			end,
-		})
+		}, opts.NoSave)
 
 		return {
 			Set = function(_, val)
